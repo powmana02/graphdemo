@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8">
+	<title>Beacon distance</title>
+<link rel="stylesheet" href="style01.css">
+
+</head>
+<body>
+<h1>You are here ?</h1>
+
+    <div>
+      <button onclick="connect()">Connect</button>
+      <button onclick="disconnect()">Disconnect</button>
+    </div>
+
+<p>Beacon Distance</p>
+
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script>
+
+
+//sample data (should be get via websocket)
+var jsonBeacon_ob1 = [
+  { "uuid": "xxxx", "major": 10, "minor": 1, "proximity" : "immediate" },
+  { "uuid": "yyyy", "major": 20, "minor": 2, "proximity" : "near" }
+]
+
+var jsonBeacon_ob2 = [
+  { "uuid": "xxxx", "major": 10, "minor": 1, "proximity" : "near" },
+  { "uuid": "yyyy", "major": 20, "minor": 2, "proximity" : "near" }
+]
+
+var jsonSummary = [
+  { "uuid": "yyyy", "major": 10, "minor": 1, "ob1" : 1, "ob2" : 1 },
+  { "uuid": "yyyy", "major": 20, "minor": 2, "ob1" : 1, "ob2" : 0 }
+]
+
+var rawData = [
+{"deviceid":"784b87a71c7b","uuid":"bec26202a8d84a9480fc9ac1de37daa6","major":2345,"minor":6789,"rssi":-62,"accuracy":0.4028817481723594,"proximity":"immediate","timestamp":1431532980782},
+{"deviceid":"784b87a71c7b","uuid":"bec26202a8d84a9480fc9ac1de37daa6","major":2345,"minor":6789,"rssi":-60,"accuracy":0.36787083000857246,"proximity":"immediate","timestamp":1431532981802},
+{"deviceid":"784b87a71c7b","uuid":"bec26202a8d84a9480fc9ac1de37daa6","major":2345,"minor":6789,"rssi":-61,"accuracy":0.38497849692608876,"proximity":"immediate","timestamp":1431532983119},
+{"deviceid":"784b87a71c7b","uuid":"bec26202a8d84a9480fc9ac1de37daa6","major":2345,"minor":6789,"rssi":-74,"accuracy":0.6951380113990053,"proximity":"near","timestamp":1431532984252}
+]
+
+
+/////////////////////
+// init settigs for your device
+
+//array or json?
+var obids={
+	"ob1":{"deviceid":"784b87a71c7b"},
+	"ob2":{"deviceid":"784b87a5bd59"},
+	"ob3":{"deviceid":"784b87a71c99"},
+	"ob4":{"deviceid":"784b87a5bd99"}
+	};
+	
+var bcids=[
+	{"uuid":"bec26202a8d84a9480fc9ac1de37daa6","major":2345,"minor":6789, "bcid":"bc1"},
+	{"uuid":"bec26202a8d84a9480fc9ac1de37daa6","major":1111,"minor":2222, "bcid":"bc2"}
+	]; 
+
+////////////////////
+// common settings
+var w = 500;
+var h = 200;
+var margin = {top: 20, right: 50, bottom: 30, left: 50};
+var proximity = {far: 10, near: 50, immediate: 100};
+
+var gh = 30; //縦幅
+var gw = 50; //隙間
+
+
+
+/////////////////////////////
+//utils
+
+//proximity to num
+function convdistance(d){
+   if (d == "immediate") return proximity.immediate;
+   if (d == "near") return proximity.near;
+   else return proximity.far;
+}
+
+
+function convdistance2(d, i, deviceid, proximity){
+	console.log("!!!!!!!!!!!!!");
+	console.log(deviceid);
+	console.log(proximity);
+	console.log(i);
+	console.log(d);
+
+	if (deviceid == d){
+		   if (proximity == "immediate") return proximity.immediate;
+		   if (proximity == "near") return proximity.near;
+		   else return proximity.far;
+	}
+	else return proximity.near;
+}
+
+//specify openblocks
+function convbeacon(d){
+	var s = bcids.filter(function(item, idex){
+	if(item.uuid == d.uuid){};
+	});
+}
+
+
+///TODO : 0にならないのは、ビーコンがデータがある時しか送ってこないから。別の方法で0リセットしないといけない
+function updatebc(data){
+ var sensorData = JSON.parse(data);
+ var distance = convdistance(sensorData.proximity);
+	console.log(sensorData.deviceid);
+
+rectbc1.transition().delay(1000)
+	.attr({width:xScale(distance)});
+// 	.attr({width:function(d,i){convdistance2(d, i, sensorData.deviceid,sensorData.proximity);}});
+
+
+}
+
+/////////////////////////////////////////////////
+
+//!!!!!!!!!!cannot parse. why?
+//var datasetob_json = JSON.parse(obids);
+
+//var datasetbc = ["bec26202a8d84a9480fc9ac1de37daa6","bec26202a8d84a9480fc9ac1de37daa5"];
+var datasetbc = ["784b87a71c7b","784b87a5bd59"];
+var datasetbcvalue = [0, 50, 100];
+
+
+var xScale = d3.scale.linear()
+				.domain([0,d3.max(datasetbcvalue)])
+				.range([margin.left, w - margin.right])
+				.nice();
+
+var svg = d3.select("body").append("svg").attr({width:w,height:h});
+
+var xAxis = d3.svg.axis()
+				.scale(xScale)
+				.orient("bottom");
+				
+var yAxis = d3.svg.axis()
+				.orient("left");
+				
+
+
+svg.append("g")
+	.attr({
+	class:"axis"
+	,transform: "translate(0,100)"
+	})
+	.call(xAxis);
+
+
+//frame of graph
+var rectbc0 = svg.selectAll("rectbc0").data(datasetbc).enter().append("rect")
+	.attr({
+	x:margin.left
+	,y:function(d, i){return i * gw; }
+	,width:function(d){return xScale(d3.max(datasetbcvalue));}
+	,height: gh
+	,stroke:"black"
+	,fill:"none"
+	})
+	.style("opacity", 0.5);
+	
+	
+//fillin graph (init)
+	rectbc1 = svg.selectAll("rect1").data(datasetbc).enter().append("rect")
+	.attr({
+	x:margin.left
+	,y:function(d, i){return i * gw; }
+	,width:10
+	,height: gh
+	,stroke:"none"
+	,fill:"red"
+	});
+				
+
+
+
+</script>
+
+
+
+<p>Where you are ...</p>
+
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script>
+
+var datasetob = ["ob1","ob2", "ob3"];
+var datasetobvalue = [25, 50, 75, 100];
+
+
+var xScale = d3.scale.linear()
+				.domain([0,d3.max(datasetobvalue)])
+				.range([margin.left, w - margin.right])
+				.nice();
+
+var svg = d3.select("body").append("svg").attr({width:w,height:h});
+
+var xAxis = d3.svg.axis()
+				.scale(xScale)
+				.orient("bottom");
+				
+var yAxis = d3.svg.axis()
+				.orient("left");
+
+svg.append("g")
+	.attr({
+	class:"axis"
+	,transform: "translate(0,100)"
+	})
+	.call(xAxis);
+
+//fillin
+rect1 = svg.selectAll("rect1").data(datasetob).enter().append("rect")
+	.attr({
+	x:margin.left
+	,y:function(d, i){return i * gw; }
+	,width:function(d, i){return xScale(datasetobvalue[i+1]);}
+	,height: gh
+	,stroke:"none"
+	,fill:"red"
+	});
+
+//frame
+var rect0 = svg.selectAll("rect0").data(datasetob).enter().append("rect")
+	.attr({
+	x:margin.left
+	,y:function(d, i){return i * gw; }
+	,width:function(d){return xScale(d3.max(datasetbcvalue));}
+	,height: gh
+	,stroke:"black"
+	,fill:"none"
+	})
+	.style("opacity", 0.5);
+
+function update(data){
+	updatebc(data);
+}
+
+
+////websocket
+      var wsUrl = 'ws://manaiot01.mybluemix.net/ws/sensor';
+      var socket;
+
+      function connect() {
+        socket = new WebSocket(wsUrl);
+        socket.onmessage = function(e) {
+          var sensorData = JSON.parse(e.data);
+          console.log(e.data);
+          // sensor data
+          //console.log(sensorData.uuid);
+          //console.log(sensorData.major);
+          //console.log(sensorData.minor);
+          //console.log(sensorData.proximity);
+          
+          var distance = convdistance(sensorData.proximity);
+          update(e.data);
+          console.log(distance);
+         };
+      };
+      
+      function disconnect() {
+        socket.close();
+      };
+    </script>
+
+</body>
+</html>
+
