@@ -15,12 +15,32 @@ var h = 200;
 var margin = {top: 20, right: 50, bottom: 30, left: 50};
 var proximity = {far: 10, near: 50, immediate: 100};
 var initwidth = 5;
+var colors = {blue: "#24a2d8", red: "#FF6847", orange: "#E8D36E", green:"#61FF7A", gray:"#515D70"};
 
 var gh = 50; //縦幅
 var gw = 50; //隙間
 gi = 5; //初期横幅
 
 var datasetbcvalue = [0, 50, 100];
+
+//colors
+//blue = #24a2d8
+//red = FF6847
+//orange =E8D36E
+//green = 61FF7A 
+//gray =
+
+//assume 3 sensors
+datasetobarriveflg = [0,0,0,0];
+var datasetobcolor = ["#FF6847", "#E8D36E", "#61FF7A"];
+var datasetobvalue = [25, 70, 100];
+
+
+//for 4 sensors
+//datasetobarriveflg = [0,0,0,0];
+//var datasetobcolor = ["#FF6847", "#FF6847", "#E8D36E", "#61FF7A"];
+//var datasetobvalue = [25, 50, 75, 100];
+
 
 var xScale = d3.scale.linear()
 				.domain([0,d3.max(datasetbcvalue)])
@@ -37,44 +57,136 @@ function convdistance(d){
    else return proximity.far;
 }
 
+//specify device
+function getDeviceCode (d) {
+//deviceid
+//purp_com3 : 784b87a71c7b
+//pink_com4 : 784b87a5bd59
+//none_com6 : 784b87aac59e
+//yell_com7 : 90b686083265
+
+   if (d == "784b87a71c7b") return 0;
+   if (d == "784b87a5bd59") return 1;
+   if (d == "784b87aac59e") return 2;
+   if (d == "90b686083265") return 3;
+   else return -1;
+}
+
+//specify beacon
+function getUserCode (d) {
+//beaconid
+//bc1(high) : "uuid":"bec26202a8d84a9480fc9ac1de37daa6","major":2345,"minor":6789
+//bc2(23-5) : "uuid":"471de68958c247b9b2262cb71e61e699","major":23,"minor":5
+
+   if (d == "bec26202a8d84a9480fc9ac1de37daa6") return 0;
+   if (d == "471de68958c247b9b2262cb71e61e699") return 1;
+   else return -1;
+}
+
+//fillcheck
+function fillcheck(fillarray){
+    if(fillarray.length == 1 && fillarray[0] == 1) return 1;
+    subarray = fillarray;
+    fillcheck(subarray);
+}
+
+
+function updateob(data){
+
+ var sensorData = JSON.parse(data);
+ var beaconid = sensorData.uuid;
+ var deviceid = sensorData.deviceid;
+ var distance = convdistance(sensorData.proximity);
+ console.log(sensorData.deviceid + " : " + distance+ " : " + beaconid);
+
+var r0arr = ['r110', 'r120', 'r130'];
+var r1arr = ["r111", "r121", "r131"];
+
+// reset frame : 'r110', 'r120', 'r130', 'r140'
+for (i = 0; i < r0arr.length; i++){
+    console.log(r0arr[i]);
+	var r0 = document.getElementById(r0arr[i]);
+	r0.setAttribute('width', xScale(d3.max(datasetbcvalue)));
+}
+
+//get beaconid(user) --> rect id;
+var userCode = getUserCode(beaconid);
+var rectid = "rdummy";
+if (userCode >= 0 ){
+	rectid = "rect#" + r1arr[userCode];
+}
+console.log(rectid);
+//get rect
+ var rectob1 = d3.selectAll(rectid);
+
+
+ //check arrive point by user
+ var deviceCode = getDeviceCode(deviceid);
+ if (distance == proximity.immediate){
+ 	console.log("arrive at:" + deviceCode);
+ 	datasetobarriveflg[deviceCode] = 1;
+ }
+ 
+ console.log("arrive stat:" + datasetobarriveflg);
+
+ //fill check (100, 110, 111 is assumed);
+ //var checkresult = fillcheck(datasetobarriveflg);
+ var checkresult = 1;
+ 
+//fill (with 3 points)
+if (checkresult == 1){
+    for(i = 2; i >=0; i-- ){
+     if (datasetobarriveflg[i] == 1){
+        //need fillcheck
+    	rectob1.transition().delay(1500)
+    	.attr({
+    		width:xScale(datasetobvalue[i])
+    		,fill:datasetobcolor[i]
+    	});
+        return;
+      }
+    }
+}
+
+}	
+
+
+
 
 function updatebc(data){
 
  var sensorData = JSON.parse(data);
  var beaconid = sensorData.uuid;
+ var deviceid = sensorData.deviceid;
  var distance = convdistance(sensorData.proximity);
-	console.log(sensorData.deviceid + " : " + distance+ " : " + beacon);
+	console.log(sensorData.deviceid + " : " + distance+ " : " + beaconid);
 
 
 
 var r0arr = ['r210', 'r220', 'r230', 'r240'];
-var r1arr = ['r211', 'r221', 'r231', 'r241'];
+var r1arr = ["r211", "r221", "r231", "r241"];
 
-// init frame : 'r210' 'r220' 'r230' 'r240'
+// reset frame : 'r210' 'r220' 'r230' 'r240'
 for (i = 0; i < r0arr.length; i++){
 	var r0 = document.getElementById(r0arr[i]);
 	r0.setAttribute('width', xScale(d3.max(datasetbcvalue)));
 }
 
 
-// update value : 'r211' 'r221' 'r231' 'r241'
   
- //value (fillin)
+//value (fillin)  (update value : 'r211' 'r221' 'r231' 'r241')
 
 //get device id --> rect id;
-var rectid = "";
-var rectid = getRectid(deviceid);
-
+var deviceCode = getDeviceCode(deviceid);
+var rectid = "rdummy";
+if (deviceCode >= 0 ){
+	rectid = "rect#" + r1arr[deviceCode];
+}
+console.log(rectid);
 //update rect
  var r1 = d3.selectAll(rectid);
  r1.transition().delay(1500)
 	.attr({width:xScale(distance)});
-
-
-
-// var r211 = d3.selectAll("rect#r211");
-// r211.transition().delay(1500)
-//	.attr({width:xScale(distance)});
 
 }
 
@@ -137,7 +249,7 @@ function update(data){
         </tr>
       </table>
       <br>
-        <table width="650" border="1" cellspacing="0" cellpadding="0">
+        <table width="650" border="0" cellspacing="0" cellpadding="0">
         <tr valign="top"> 
           <td width="19"><img src="image/spacer.gif" width="19" height="19"></td>
           <td width="100"><img src="image/vivek-image.jpg" width="100" height="100"></td>
@@ -148,7 +260,7 @@ function update(data){
                     xmlns:xlink="http://www.w3.org/1999/xlink"
                     width="500" height="80">
                  <rect id="r110" width="500" height="50" stroke="gray" fill="none" />
-                 <rect id="r111" width="5" height="50" fill="red" /
+                 <rect id="r111" width="5" height="50" fill="#FF6847" />
                </svg>
              </div>
           </td>
@@ -161,9 +273,18 @@ function update(data){
         </tr>
         <tr valign="top">
           <td>&nbsp;</td>
-          <td><img src="image/vivek-image.jpg" width="100" height="100"></td>
+          <td><img src="image/someone-image.jpg" width="100" height="100"></td>
           <td>&nbsp;</td>
-          <td align="right">&nbsp;</td>
+          <td align="right" width="521">&nbsp;
+             <div class="beacon">
+               <svg xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    width="500" height="80">
+                 <rect id="r120" width="500" height="50" stroke="gray" fill="none" />
+                 <rect id="r121" width="5" height="50" fill="#FF6847" />
+               </svg>
+             </div>
+          </td>
         </tr>
         <tr valign="top">
           <td>&nbsp;</td>
@@ -173,9 +294,18 @@ function update(data){
         </tr>
         <tr valign="top">
           <td>&nbsp;</td>
-          <td><img src="image/vivek-image.jpg" width="100" height="100"></td>
+          <td><img src="image/someone-image.jpg" width="100" height="100"></td>
           <td>&nbsp;</td>
-          <td align="right">&nbsp;</td>
+          <td align="right" width="521">&nbsp;
+             <div class="beacon">
+               <svg xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    width="500" height="80">
+                 <rect id="r130" width="500" height="50" stroke="gray" fill="none" />
+                 <rect id="r131" width="5" height="50" fill="#FF6847" />
+               </svg>
+             </div>
+          </td>
         </tr>
         <tr valign="top">
           <td>&nbsp;</td>
@@ -196,18 +326,18 @@ function update(data){
         </tr>
       </table>
       <p>&nbsp;</p>
-      <table width="650" border="1" cellspacing="0" cellpadding="0">
+      <table width="650" border="0" cellspacing="0" cellpadding="0">
         <tr valign="top">
           <td width="19"><img src="image/spacer.gif" width="19" height="19"></td>
           <td width="100"><img src="image/op.jpg" width="60" height="74"></font></td>
           <td width="5">&nbsp;</td>
           <td align="right" width="521">&nbsp;
-            <div class="beacon">
+            <div class="sensor">
                <svg xmlns="http://www.w3.org/2000/svg"
                     xmlns:xlink="http://www.w3.org/1999/xlink"
                     width="500" height="80">
                  <rect id="r210" width="500" height="50" stroke="gray" fill="none" />
-                 <rect id="r211" width="5" height="50" fill="red" /
+                 <rect id="r211" width="5" height="50" fill="#24a2d8" />
                </svg>
              </div>
           </td>
@@ -223,12 +353,12 @@ function update(data){
           <td width="80"><font size="2"><img src="image/op.jpg" width="60" height="74"></font></td>
           <td>&nbsp;</td>
           <td align="right" width="521">&nbsp;
-            <div class="beacon">
+            <div class="sensor">
                <svg xmlns="http://www.w3.org/2000/svg"
                     xmlns:xlink="http://www.w3.org/1999/xlink"
                     width="500" height="80">
                  <rect id="r220" width="500" height="50" stroke="gray" fill="none" />
-                 <rect id="r221" width="5" height="50" fill="red" /
+                 <rect id="r221" width="5" height="50" fill="#24a2d8" />
                </svg>
              </div>
           </td>
@@ -244,12 +374,12 @@ function update(data){
           <td><font size="2"><img src="image/op.jpg" width="60" height="74"></font></td>
           <td>&nbsp;</td>
           <td align="right" width="521">&nbsp;
-            <div class="beacon">
+            <div class="sensor">
                <svg xmlns="http://www.w3.org/2000/svg"
                     xmlns:xlink="http://www.w3.org/1999/xlink"
                     width="500" height="80">
                  <rect id="r230" width="500" height="50" stroke="gray" fill="none" />
-                 <rect id="r231" width="5" height="50" fill="red" /
+                 <rect id="r231" width="5" height="50" fill="#24a2d8" />
                </svg>
              </div>
           </td>
@@ -265,12 +395,12 @@ function update(data){
           <td><font size="2"><img src="image/op.jpg" width="60" height="74"></font></td>
           <td>&nbsp;</td>
           <td align="right" width="521">&nbsp;
-            <div class="beacon">
+            <div class="sensor">
                <svg xmlns="http://www.w3.org/2000/svg"
                     xmlns:xlink="http://www.w3.org/1999/xlink"
                     width="500" height="80">
                  <rect id="r240" width="500" height="50" stroke="gray" fill="none" />
-                 <rect id="r241" width="5" height="50" fill="red" /
+                 <rect id="r241" width="5" height="50" fill="#24a2d8" />
                </svg>
              </div>
           </td>
@@ -281,12 +411,23 @@ function update(data){
           <td>&nbsp;</td>
           <td align="right">&nbsp;</td>
         </tr>
+<!-- if you need 5th device
         <tr valign="top">
           <td>&nbsp;</td>
           <td><font size="2"><img src="image/op.jpg" width="60" height="74"></font></td>
           <td>&nbsp;</td>
-          <td align="right">&nbsp;</td>
+          <td align="right" width="521">&nbsp;
+            <div class="sensor">
+               <svg xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    width="500" height="80">
+                 <rect id="r250" width="500" height="50" stroke="gray" fill="none" />
+                 <rect id="r251" width="5" height="50" fill="#24a2d8" /
+               </svg>
+             </div>
+          </td>
         </tr>
+-->
       </table>
       <p>&nbsp;</p>
     </td>
