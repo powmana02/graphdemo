@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>company_website03</title>
+<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+<meta name="Description" content="Made By Web Design Template @rt_web Designed With TimeLineDesignUnitLens">
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script>
+
+
+////////////////////
+// common settings
+var w = 500;
+var h = 200;
+var margin = {top: 20, right: 50, bottom: 30, left: 50};
+var proximity = {far: 10, near: 50, immediate: 100};
+var initwidth = 5;
+
+var gh = 50; //縦幅
+var gw = 50; //隙間
+gi = 5; //初期横幅
+
+var datasetbcvalue = [0, 50, 100];
+
+var xScale = d3.scale.linear()
+				.domain([0,d3.max(datasetbcvalue)])
+				.range([margin.left, w - margin.right])
+				.nice();
+				
+/////////////////////////////
+//utils
+
+//proximity to num
+function convdistance(d){
+   if (d == "immediate") return proximity.immediate;
+   if (d == "near") return proximity.near;
+   else return proximity.far;
+}
+
+
+function updatebc(data){
+
+ var sensorData = JSON.parse(data);
+ var beaconid = sensorData.uuid;
+ var distance = convdistance(sensorData.proximity);
+	console.log(sensorData.deviceid + " : " + distance+ " : " + beacon);
+
+
+
+var r0arr = ['r210', 'r220', 'r230', 'r240'];
+var r1arr = ['r211', 'r221', 'r231', 'r241'];
+
+// init frame : 'r210' 'r220' 'r230' 'r240'
+for (i = 0; i < r0arr.length; i++){
+	var r0 = document.getElementById(r0arr[i]);
+	r0.setAttribute('width', xScale(d3.max(datasetbcvalue)));
+}
+
+
+// update value : 'r211' 'r221' 'r231' 'r241'
+  
+ //value (fillin)
+
+//get device id --> rect id;
+var rectid = "";
+var rectid = getRectid(deviceid);
+
+//update rect
+ var r1 = d3.selectAll(rectid);
+ r1.transition().delay(1500)
+	.attr({width:xScale(distance)});
+
+
+
+// var r211 = d3.selectAll("rect#r211");
+// r211.transition().delay(1500)
+//	.attr({width:xScale(distance)});
+
+}
+
+//////////////////////////////////////
+////update screen
+function update(data){
+	updatebc(data);
+	updateob(data);
+}
+
+
+////websocket
+      var wsUrl = 'ws://manaiot02.mybluemix.net/ws/sensor';
+      var socket;
+
+      function connect() {
+        socket = new WebSocket(wsUrl);
+        socket.onmessage = function(e) {
+          console.log(e.data);
+          update(e.data);
+         };
+      };
+      
+      function disconnect() {
+        socket.close();
+      };
+      
+    </script>
+
+</head>
+
+<body onload="connect()" bgcolor="#FFFFFF" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" text="#666666">
+<table width="700" border="0" cellpadding="0" cellspacing="0">
+  <tr>
+    <td><img src="image/obj_header_01.gif" width="700" height="7"></td>
+  </tr>
+</table>
+<table width="700" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td width="291"><img src="image/obj_sitetitle.gif" width="291" height="67"></td>
+    <td width="409"><img src="image/obj_header_02.gif" width="409" height="67"></td>
+  </tr>
+  <tr>
+    <td width="291" background="image/obj_header_03.gif"><img src="image/ba_welcomeour.gif" width="291" height="34"></td>
+    <td width="409"><img src="image/obj_header_04.gif" width="409" height="34"></td>
+  </tr>
+</table>
+<table width="700" border="0" cellspacing="0" cellpadding="0">
+  <tr> 
+    <td valign="top" align="center"><br>
+      <table width="650" border="0" cellspacing="0" cellpadding="0">
+        <tr> 
+          <td><img src="image/imadoko.png" width="500" height="43"></td>
+          <td width="39"><a href="#"><img src="image/obj_p_more.gif" width="39" height="20" border="0"></a></td>
+        </tr>
+        <tr>
+          <td height="13"><p>このメーターでは、優良顧客の方の来店を察知することができます。</p>
+          </td>
+          <td>&nbsp;</td>
+        </tr>
+      </table>
+      <br>
+        <table width="650" border="1" cellspacing="0" cellpadding="0">
+        <tr valign="top"> 
+          <td width="19"><img src="image/spacer.gif" width="19" height="19"></td>
+          <td width="100"><img src="image/vivek-image.jpg" width="100" height="100"></td>
+          <td width="5">&nbsp;</td>
+          <td align="right" width="521">&nbsp;
+             <div class="beacon">
+               <svg xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    width="500" height="80">
+                 <rect id="r110" width="500" height="50" stroke="gray" fill="none" />
+                 <rect id="r111" width="5" height="50" fill="red" /
+               </svg>
+             </div>
+          </td>
+        </tr>
+        <tr valign="top">
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td align="right">&nbsp;</td>
+        </tr>
+        <tr valign="top">
+          <td>&nbsp;</td>
+          <td><img src="image/vivek-image.jpg" width="100" height="100"></td>
+          <td>&nbsp;</td>
+          <td align="right">&nbsp;</td>
+        </tr>
+        <tr valign="top">
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td align="right">&nbsp;</td>
+        </tr>
+        <tr valign="top">
+          <td>&nbsp;</td>
+          <td><img src="image/vivek-image.jpg" width="100" height="100"></td>
+          <td>&nbsp;</td>
+          <td align="right">&nbsp;</td>
+        </tr>
+        <tr valign="top">
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td align="right">&nbsp;</td>
+        </tr>
+      </table>
+      <br>
+      <table width="650" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+          <td><img src="image/kokomade.png" width="500" height="43"></td>
+          <td width="39"><a href="#"><img src="image/obj_p_more.gif" width="39" height="20" border="0"></a></td>
+        </tr>
+        <tr>
+          <td height="13"><p>このメーターでは、店内のどの商品で立ち止っているのかを検知することができます。</p></td>
+          <td>&nbsp;</td>
+        </tr>
+      </table>
+      <p>&nbsp;</p>
+      <table width="650" border="1" cellspacing="0" cellpadding="0">
+        <tr valign="top">
+          <td width="19"><img src="image/spacer.gif" width="19" height="19"></td>
+          <td width="100"><img src="image/op.jpg" width="60" height="74"></font></td>
+          <td width="5">&nbsp;</td>
+          <td align="right" width="521">&nbsp;
+            <div class="beacon">
+               <svg xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    width="500" height="80">
+                 <rect id="r210" width="500" height="50" stroke="gray" fill="none" />
+                 <rect id="r211" width="5" height="50" fill="red" /
+               </svg>
+             </div>
+          </td>
+        </tr>
+        <tr valign="top">
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td align="right">&nbsp;</td>
+        </tr>
+        <tr valign="top">
+          <td width="19"><img src="image/spacer.gif" width="19" height="19"></td>
+          <td width="80"><font size="2"><img src="image/op.jpg" width="60" height="74"></font></td>
+          <td>&nbsp;</td>
+          <td align="right" width="521">&nbsp;
+            <div class="beacon">
+               <svg xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    width="500" height="80">
+                 <rect id="r220" width="500" height="50" stroke="gray" fill="none" />
+                 <rect id="r221" width="5" height="50" fill="red" /
+               </svg>
+             </div>
+          </td>
+        </tr>
+        <tr valign="top">
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td align="right">&nbsp;</td>
+        </tr>
+        <tr valign="top">
+          <td>&nbsp;</td>
+          <td><font size="2"><img src="image/op.jpg" width="60" height="74"></font></td>
+          <td>&nbsp;</td>
+          <td align="right" width="521">&nbsp;
+            <div class="beacon">
+               <svg xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    width="500" height="80">
+                 <rect id="r230" width="500" height="50" stroke="gray" fill="none" />
+                 <rect id="r231" width="5" height="50" fill="red" /
+               </svg>
+             </div>
+          </td>
+        </tr>
+        <tr valign="top">
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td align="right">&nbsp;</td>
+        </tr>
+        <tr valign="top">
+          <td>&nbsp;</td>
+          <td><font size="2"><img src="image/op.jpg" width="60" height="74"></font></td>
+          <td>&nbsp;</td>
+          <td align="right" width="521">&nbsp;
+            <div class="beacon">
+               <svg xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    width="500" height="80">
+                 <rect id="r240" width="500" height="50" stroke="gray" fill="none" />
+                 <rect id="r241" width="5" height="50" fill="red" /
+               </svg>
+             </div>
+          </td>
+        </tr>
+        <tr valign="top">
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td align="right">&nbsp;</td>
+        </tr>
+        <tr valign="top">
+          <td>&nbsp;</td>
+          <td><font size="2"><img src="image/op.jpg" width="60" height="74"></font></td>
+          <td>&nbsp;</td>
+          <td align="right">&nbsp;</td>
+        </tr>
+      </table>
+      <p>&nbsp;</p>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top" align="center">&nbsp;</td>
+  </tr>
+</table>
+<table width="700" border="0" cellspacing="0" cellpadding="0">
+  <tr> 
+    <td align="center"> 
+      <hr width="680" size="1">
+    </td>
+  </tr>
+</table>
+<table width="700" border="0" cellspacing="0" cellpadding="0">
+  <tr> 
+    <td width="350">
+      <table border="0" cellpadding="0" cellspacing="0" id="counter">
+        <tr> 
+          <td width="25"><img src="image/spacer.gif" width="25" height="9"></td>
+          <td width="45">&nbsp;</td>
+          <td><img src="image/0.gif" width="7" height="9"><img src="image/1.gif" width="7" height="9"><img src="image/2.gif" width="7" height="9"><img src="image/3.gif" width="7" height="9"><img src="image/4.gif" width="7" height="9"><img src="image/5.gif" width="7" height="9"><img src="image/6.gif" width="7" height="9"><img src="image/7.gif" width="6" height="9"><img src="image/8.gif" width="7" height="9"><img src="image/9.gif" width="7" height="9"></td>
+        </tr>
+      </table>
+    </td>
+    <td align="right" width="350"><font size="1">Copyrights (C) IBM XCITE Spring 2015. 
+      All Rights Reserved.（記述例です）</font></td>
+  </tr>
+</table>
+<br>
+</body>
+</html>
