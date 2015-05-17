@@ -83,11 +83,16 @@ function getUserCode (d) {
    else return -1;
 }
 
-//fillcheck
+//fillcheck (100, 110, 111 is assumed, if not reset larger bit);
 function fillcheck(fillarray){
-    if(fillarray.length == 1 && fillarray[0] == 1) return 1;
-    subarray = fillarray;
-    fillcheck(subarray);
+    var sum = 0;
+    for(var i=0; i < fillarray.length; i++){
+        sum += fillarray[i];
+        if( sum != (i+1)){
+        	return 0;
+        }
+    }
+    return 1;
 }
 
 
@@ -104,7 +109,6 @@ var r1arr = ["r111", "r121", "r131"];
 
 // reset frame : 'r110', 'r120', 'r130', 'r140'
 for (i = 0; i < r0arr.length; i++){
-    console.log(r0arr[i]);
 	var r0 = document.getElementById(r0arr[i]);
 	r0.setAttribute('width', xScale(d3.max(datasetbcvalue)));
 }
@@ -115,7 +119,7 @@ var rectid = "rdummy";
 if (userCode >= 0 ){
 	rectid = "rect#" + r1arr[userCode];
 }
-console.log(rectid);
+
 //get rect
  var rectob1 = d3.selectAll(rectid);
 
@@ -123,18 +127,27 @@ console.log(rectid);
  //check arrive point by user
  var deviceCode = getDeviceCode(deviceid);
  if (distance == proximity.immediate){
- 	console.log("arrive at:" + deviceCode);
  	datasetobarriveflg[deviceCode] = 1;
  }
  
  console.log("arrive stat:" + datasetobarriveflg);
+ 
+ //come to shop
+ if(datasetobarriveflg[0] == 1 ||datasetobarriveflg[1] == 1||datasetobarriveflg[2] == 1){
+  var imgid="img#vivek";
+  var imgtag = d3.selectAll(imgid)
+  	.attr({
+  		src:"image/vivek-image.jpg"
+  		});
+ }
 
- //fill check (100, 110, 111 is assumed);
- //var checkresult = fillcheck(datasetobarriveflg);
- var checkresult = 1;
+ //fill check 
+ var fillcheckresult = fillcheck(datasetobarriveflg);
+ //var fillcheckresult = 1;
+ console.log("fillcheckresult:" + fillcheckresult);
  
 //fill (with 3 points)
-if (checkresult == 1){
+if (fillcheckresult == 1){
     for(i = 2; i >=0; i-- ){
      if (datasetobarriveflg[i] == 1){
         //need fillcheck
@@ -182,7 +195,7 @@ var rectid = "rdummy";
 if (deviceCode >= 0 ){
 	rectid = "rect#" + r1arr[deviceCode];
 }
-console.log(rectid);
+
 //update rect
  var r1 = d3.selectAll(rectid);
  r1.transition().delay(1500)
@@ -252,7 +265,7 @@ function update(data){
         <table width="650" border="0" cellspacing="0" cellpadding="0">
         <tr valign="top"> 
           <td width="19"><img src="image/spacer.gif" width="19" height="19"></td>
-          <td width="100"><img src="image/vivek-image.jpg" width="100" height="100"></td>
+          <td width="100"><img id="vivek" src="image/someone-image.jpg" width="100" height="100"></td>
           <td width="5">&nbsp;</td>
           <td align="right" width="521">&nbsp;
              <div class="beacon">
